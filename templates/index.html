@@ -1,0 +1,94 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>ZOF - Zero of Functions Solver</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    /* small built-in styles in case static missing */
+    body{font-family: Arial, Helvetica, sans-serif; max-width:980px;margin:20px auto;padding:10px;}
+    .box{border:1px solid #ddd;padding:12px;border-radius:8px;margin-bottom:12px;}
+    input, select, textarea {width:100%;padding:8px;margin:6px 0;border-radius:4px;border:1px solid #ccc;}
+    button {padding:8px 16px;border-radius:6px;border:none;background:#2b7cff;color:white;}
+    table{width:100%;border-collapse:collapse;margin-top:12px;}
+    th, td{padding:6px;border:1px solid #ddd;text-align:center;font-family:monospace;}
+    .error {color: #b00020;background:#ffe6e6;padding:8px;border-radius:6px;}
+  </style>
+</head>
+<body>
+  <h1>ZOF — Zero of Functions Solver</h1>
+  <div class="box">
+    <form method="post">
+      <label>f(x) (Python syntax):</label>
+      <input name="function" placeholder="example: x**3 - 2*x - 5" required>
+      <label>Method:</label>
+      <select name="method" id="method" onchange="toggleInputs()">
+        <option value="bisection">Bisection</option>
+        <option value="regulafalsi">Regula Falsi</option>
+        <option value="secant">Secant</option>
+        <option value="newton">Newton-Raphson</option>
+        <option value="fixed">Fixed Point (g(x))</option>
+        <option value="modified_secant">Modified Secant</option>
+      </select>
+      <div id="a_b" style="display:block;">
+        <label>a:</label><input name="a" type="text" placeholder="a (for interval) e.g. 1">
+        <label>b:</label><input name="b" type="text" placeholder="b (for interval) e.g. 3">
+      </div>
+      <div id="x0_x1" style="display:none;">
+        <label>x0:</label><input name="x0" placeholder="x0 e.g. 1.0">
+        <label>x1:</label><input name="x1" placeholder="x1 e.g. 2.0">
+      </div>
+      <div id="gfunc" style="display:none;">
+        <label>g(x) for Fixed Point:</label>
+        <input name="gfunction" placeholder="g(x) e.g. (2*x+5)**(1/3)">
+      </div>
+      <div id="delta_div" style="display:none;">
+        <label>delta (for Modified Secant, fraction e.g. 1e-3):</label><input name="delta" placeholder="1e-3">
+      </div>
+      <label>Tolerance:</label><input name="tolerance" placeholder="1e-8">
+      <label>Max Iterations:</label><input name="maxit" placeholder="50">
+      <button type="submit">Compute</button>
+    </form>
+  </div>
+
+  {% if error %}
+    <div class="error">{{ error }}</div>
+  {% endif %}
+
+  {% if result %}
+    <div class="box">
+      <h3>Method: {{ result.method }} — Function: {{ result.function }}</h3>
+      <p>Estimated root: <strong>{{ '{:.12f}'.format(result.root) }}</strong></p>
+      <p>f(root) = {{ '{:.6e}'.format(result.froot) }} | iterations: {{ result.its }}</p>
+
+      <table>
+        <thead>
+          <tr><th>k</th><th>x_k</th><th>f(x_k)</th><th>error</th><th>notes</th></tr>
+        </thead>
+        <tbody>
+        {% for row in result.iters %}
+          <tr>
+            <td>{{ row[0] }}</td>
+            <td>{{ '{:.12f}'.format(row[1]) }}</td>
+            <td>{{ '{:.6e}'.format(row[2]) if row[2] is not none else 'n/a' }}</td>
+            <td>{{ '{:.6e}'.format(row[3]) }}</td>
+            <td>{{ row[4] }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+
+  <script>
+    function toggleInputs(){
+      const method = document.getElementById('method').value;
+      document.getElementById('a_b').style.display = (method==='bisection' || method==='regulafalsi') ? 'block' : 'none';
+      document.getElementById('x0_x1').style.display = (method==='secant' || method==='newton' || method==='modified_secant' || method==='fixed') ? 'block' : 'none';
+      document.getElementById('gfunc').style.display = (method==='fixed') ? 'block' : 'none';
+      document.getElementById('delta_div').style.display = (method==='modified_secant') ? 'block' : 'none';
+    }
+    window.onload = toggleInputs;
+  </script>
+</body>
+</html>
